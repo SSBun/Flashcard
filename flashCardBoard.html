@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flash Card Board</title>
+  <link rel="stylesheet" href="/flashCardBoard.css">
+  <link rel="stylesheet" href="/reset.css">
+  <script src="/jquery-3.6.0.js"></script>
+  <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+      html {
+          margin: 0;
+      }
+
+      @media print {
+          @page {
+              size: A4 landscape;
+          }
+
+          /*@page :left {*/
+          /*    margin-left: 0;*/
+          /*    margin-right: 0;*/
+          /*}*/
+
+          /*@page :right {*/
+          /*    margin-left: 0;*/
+          /*    margin-right: 0;*/
+          /*}*/
+
+          .flash-card-container {
+              page-break-after: always;
+              page-break-inside: avoid;
+          }
+      }
+
+      .flash-card-container {
+          display: grid;
+          grid-template-columns: auto auto auto auto;
+          margin: 0;
+      }
+
+      .flash-card {
+          height: 190px;
+          display: flex;
+      }
+
+      .flash-card:not(.back) {
+          border-left: darkgray dashed 1px;
+          border-bottom: darkgray dashed 1px;
+      }
+
+      .flash-card .content {
+          margin: auto;
+      }
+
+      .flash-card.back {
+          -webkit-transform: rotateZ(180deg);
+      }
+  </style>
+</head>
+<body>
+<div class="flash-card" style="display: none">
+  <div class="content">
+    Title A
+  </div>
+</div>
+<div class="flash-card-container">
+</div>
+<script>
+    class CardInfo {
+        constructor(title, subtitle, interpretation) {
+            this.title = title
+            this.subtitle = subtitle
+            this.interpretation = interpretation
+        }
+    }
+
+    class RenderingCard {
+        constructor(title, isBack) {
+            this.title = title
+            this.isBack = isBack
+        }
+    }
+
+    class CardManager {
+        constructor() {
+            this.cards = []
+        }
+
+        addCard(card) {
+            this.cards.push(card)
+        }
+
+        generateRenderingCards() {
+            let result = []
+            let cards = this.cards
+            const remainder = cards.length % 16
+            if (remainder !== 0) {
+                for (let i = 0; i < 16 - remainder; i++) {
+                    cards.push(new CardInfo(`${i}`, `${i}`, `${i}`))
+                }
+            }
+
+            const groupedCards = groupArray(cards, 16)
+
+            for (const group of groupedCards) {
+                result = result.concat(group.map((info) => new RenderingCard(info.title, false)))
+                result.push(new RenderingCard("|", false))
+                const groupedBackCards = groupArray(group, 4)
+                for (const backCards of groupedBackCards) {
+                    result = result.concat(backCards.reverse().map((info) => new RenderingCard(info.subtitle, true)))
+                }
+            }
+            return result
+        }
+    }
+
+    function groupArray(arr, size) {
+        let result = []
+        let tuple = []
+        for (const i in arr) {
+            if (i % size === 0 && tuple.length !== 0) {
+                result.push(tuple)
+                tuple = []
+            }
+            tuple.push(arr[i])
+        }
+        if (tuple.length !== 0) {
+            result.push(tuple)
+        }
+        return result
+    }
+
+    $(document).ready(() => {
+        initFlashCards()
+    });
+
+    function initFlashCards() {
+        const cardManager = new CardManager()
+        for (let i = 0; i < 16; i++) {
+            cardManager.addCard(new CardInfo(`title ${i}`, `subtitle ${i}`, `interpretation ${i}`))
+        }
+        const cards = cardManager.generateRenderingCards()
+        const flashCard = $('.flash-card:first')
+        const originalFlashCardContainer = $('.flash-card-container:first')
+        const flashCardContainerTemplate = originalFlashCardContainer.clone()
+
+        let isFront= true
+        let flashCardContainer = originalFlashCardContainer
+        flashCardContainer.addClass('front')
+        for (const card of cards) {
+            if (card.title === '|') {
+                isFront = !isFront
+                // New page
+                flashCardContainer = flashCardContainerTemplate.clone()
+                $('body').append(flashCardContainer)
+                flashCardContainer.addClass(isFront ? 'front' : 'back')
+                continue
+            }
+            const frontFlashCard = flashCard.clone();
+            frontFlashCard.css('display', '')
+            frontFlashCard.find('.content').text(card.title);
+            if (card.isBack) {
+                frontFlashCard.addClass('back');
+            }
+            frontFlashCard.appendTo(flashCardContainer);
+        }
+    }
+</script>
+</body>
+</html>

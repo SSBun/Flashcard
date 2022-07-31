@@ -1,0 +1,59 @@
+.body {
+    margin: 0;
+}
+
+.center {
+    margin: 30px auto;
+    background-color: red;
+    width: 50%;
+    text-align: center;
+    height: 40px;
+}
+
+.left {
+    outline: yellow solid;
+    background-color: blue;
+    width: 50%;
+    margin: 0px;
+    height: 40px;
+}
+
+.container {
+    background-color: gray;
+    position: relative;
+}
+
+.block1 {
+    background-color: red;
+    /*position: absolute;*/
+    left: 100px;
+    bottom: -10px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.block2 {
+    background-color: green;
+}
+
+.block2, .block1 {
+    display: inline-block;
+}
+
+.image {
+    display: block;
+    margin: auto;
+}
+
+.nav {
+    list-style-type: none;
+    background-color: gray;
+}
+
+.nav li {
+    display: inline;
+    margin: 0 10px;
+}
+
+.nav li:hover {
+    background-color: red;
+}
