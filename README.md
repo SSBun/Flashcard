@@ -1,1 +1,1 @@
-A static web application for generating flashcards that can easily be printed.
+A static web application for generating flashcards that can be printed easily.
