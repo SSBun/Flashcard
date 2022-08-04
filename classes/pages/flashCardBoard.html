@@ -34,7 +34,7 @@
 
       .flash-card-container {
           display: grid;
-          grid-template-columns: auto auto auto auto;
+          grid-template-columns: 25% 25% 25% 25%;
           margin: 0;
           padding-left: 10px;
       }
@@ -52,6 +52,11 @@
 
       .flash-card .content {
           margin: auto;
+          padding: 0 12px;
+          /*word-break: break-all;*/
+          /*word-wrap: break-word;*/
+          text-align: center;
+          overflow-wrap: anywhere;
       }
 
       .flash-card .number {
@@ -138,7 +143,7 @@
             for (const group of groupedCards) {
                 result = result.concat(group.map((info) => new RenderingCard(info.index, info.title, false)))
                 result.push(new RenderingCard(0, "|", false))
-                const groupedBackCards = groupArray(group, countColumns)
+                const groupedBackCards = groupArray(group, countRows)
                 for (const backCards of groupedBackCards) {
                     result = result.concat(backCards.reverse().map((info) => new RenderingCard(info.index, info.interpretation, true)))
                 }
@@ -170,6 +175,7 @@
     function initFlashCards() {
         const cardManager = new CardManager()
         const records = JSON.parse(localStorage.getItem('records'))
+        console.log(records)
         for (const record of records) {
             cardManager.addCard(
                 new CardInfo(record.index,

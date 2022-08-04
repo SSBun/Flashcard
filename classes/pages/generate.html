@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Card Generator</title>
   <link rel="stylesheet" href="/classes/css/reset.css">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="/third/jquery-3.6.0.js"></script>
   <style>
 
@@ -40,6 +41,7 @@
         flex: 1;
         -webkit-flex-direction: column;
         row-gap: 10px;
+        padding-right: 30px;
     }
 
     .menu {
@@ -70,6 +72,18 @@
         border-radius: 8px;
     }
 
+    #index {
+        width: 20px;
+    }
+
+    #title {
+        flex: 1;
+    }
+
+    #interpretation {
+        flex: 2;
+    }
+
     #generate {
         background-color: lightblue;
     }
@@ -85,18 +99,19 @@
 <div class="center-container">
   <div class="tool-bar">
     <button class="menu" id="new-card">Add New Card</button>
-    <button class="menu">Query Card</button>
-    <button class="menu">Settings</button>
+    <button class="menu" id="clean">Clean</button>
+    <button class="menu" id="save">Save</button>
     <button class="menu" id="generate">Generate</button>
   </div>
   <div class="content">
-    <div class="record">
+    <div class="record" style="display: none">
       <label for="index">Index</label>
       <input type="text" name="index" id="index">
       <label for="title">Title</label>
       <input type="text" name="title" id="title">
       <label for="interpretation">Interpretation</label>
       <input type="text" name="interpretation" id="interpretation">
+      <button class="close">X</button>
     </div>
   </div>
 </div>
@@ -106,20 +121,60 @@
 
 <script>
     const recordTemplate = $('.record:first').clone()
+    recordTemplate.css('display', '')
+
+    restoreLastRecords()
+
+    function restoreLastRecords() {
+        let records = localStorage.getItem('records')
+        if (records) {
+            records = JSON.parse(records)
+            for (const record of records) {
+                const newRecord = recordTemplate.clone()
+                newRecord.find('#index').val(record.index)
+                newRecord.find('#title').val(record.title)
+                newRecord.find('#interpretatoin').val(record.interpretation)
+                $('.content').append(newRecord)
+            }
+        }
+    }
 
     $('#generate').click(() => {
-        collectRecords()
         open("flashCardBoard.html")
     })
 
     $('#new-card').click(() => {
-        $('.content').append(recordTemplate.clone())
+        const newRecord = recordTemplate.clone()
+        const lastIndex = parseInt($('.record:last #index').val())
+        if (lastIndex) {
+            newRecord.find('#index').val(lastIndex + 1)
+        }
+        $('.content').append(newRecord)
     })
 
+    $('#clean').click(() => {
+        const returned = confirm('Are you sure remove all records?')
+        if (!returned) { return }
+        $('.content').empty()
+        localStorage.removeItem('records')
+    })
+
+    $('.close').click(function() {
+        $(this).parent().remove()
+    })
+
+    $('#save').click(() => {
+        collectRecords()
+        Toastify({
+            text: "Saved!",
+            duration: 3000,
+            close: true
+        }).showToast();
+    })
 
     function collectRecords() {
         let records = []
-        $('.record').each(function() {
+        $('.record:visible').each(function() {
             const index = $(this).find('#index').val()
             const title = $(this).find('#title').val()
             const interpretation = $(this).find('#interpretation').val()
@@ -132,6 +187,6 @@
         localStorage.setItem("records", JSON.stringify(records))
     }
 </script>
-
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </body>
 </html>
