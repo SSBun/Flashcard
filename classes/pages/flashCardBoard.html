@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Flash Card Board</title>
-  <link rel="stylesheet" href="/flashCardBoard.css">
-  <link rel="stylesheet" href="/reset.css">
-  <script src="/jquery-3.6.0.js"></script>
+  <link rel="stylesheet" href="/classes/css/flashCardBoard.css">
+  <link rel="stylesheet" href="/classes/css/reset.css">
+  <script src="/third/jquery-3.6.0.js"></script>
   <style>
       @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
@@ -22,12 +22,10 @@
           /*    margin-left: 0;*/
           /*    margin-right: 0;*/
           /*}*/
-
           /*@page :right {*/
           /*    margin-left: 0;*/
           /*    margin-right: 0;*/
           /*}*/
-
           .flash-card-container {
               page-break-after: always;
               page-break-inside: avoid;
@@ -38,38 +36,70 @@
           display: grid;
           grid-template-columns: auto auto auto auto;
           margin: 0;
+          padding-left: 10px;
       }
 
       .flash-card {
-          height: 190px;
+          height: 157px;
+          position: relative;
           display: flex;
       }
 
       .flash-card:not(.back) {
-          border-left: darkgray dashed 1px;
-          border-bottom: darkgray dashed 1px;
+          border-left: #eee dashed 1px;
+          border-bottom: #eee dashed 1px;
       }
 
       .flash-card .content {
           margin: auto;
       }
 
+      .flash-card .number {
+          display: inline-block;
+          position: absolute;
+          left: 50px;
+          top: 20px;
+          font-size: 12px;
+          font-weight: lighter;
+      }
+
+      .flash-card.front .content {
+          font-size: 25px;
+          font-weight: normal;
+      }
+
+      .flash-card.back .number {
+          display: none;
+      }
+
       .flash-card.back {
           -webkit-transform: rotateZ(180deg);
+      }
+
+      .flash-card.back .content {
+          -webkit-transform: translateX(0px);
+          font-size: 16px;
       }
   </style>
 </head>
 <body>
 <div class="flash-card" style="display: none">
+  <div class="number">
+  </div>
   <div class="content">
-    Title A
+    Null
   </div>
 </div>
 <div class="flash-card-container">
 </div>
 <script>
+    const countColumns = 5
+    const countRows = 4
+    const countPerPage = countColumns * countRows
+
     class CardInfo {
-        constructor(title, subtitle, interpretation) {
+        constructor(index, title, subtitle, interpretation) {
+            this.index = index
             this.title = title
             this.subtitle = subtitle
             this.interpretation = interpretation
@@ -77,7 +107,8 @@
     }
 
     class RenderingCard {
-        constructor(title, isBack) {
+        constructor(index, title, isBack) {
+            this.index = index
             this.title = title
             this.isBack = isBack
         }
@@ -95,21 +126,21 @@
         generateRenderingCards() {
             let result = []
             let cards = this.cards
-            const remainder = cards.length % 16
+            const remainder = cards.length % countPerPage
             if (remainder !== 0) {
-                for (let i = 0; i < 16 - remainder; i++) {
+                for (let i = 0; i < countPerPage - remainder; i++) {
                     cards.push(new CardInfo(`${i}`, `${i}`, `${i}`))
                 }
             }
 
-            const groupedCards = groupArray(cards, 16)
+            const groupedCards = groupArray(cards, countPerPage)
 
             for (const group of groupedCards) {
-                result = result.concat(group.map((info) => new RenderingCard(info.title, false)))
-                result.push(new RenderingCard("|", false))
-                const groupedBackCards = groupArray(group, 4)
+                result = result.concat(group.map((info) => new RenderingCard(info.index, info.title, false)))
+                result.push(new RenderingCard(0, "|", false))
+                const groupedBackCards = groupArray(group, countColumns)
                 for (const backCards of groupedBackCards) {
-                    result = result.concat(backCards.reverse().map((info) => new RenderingCard(info.subtitle, true)))
+                    result = result.concat(backCards.reverse().map((info) => new RenderingCard(info.index, info.interpretation, true)))
                 }
             }
             return result
@@ -138,15 +169,22 @@
 
     function initFlashCards() {
         const cardManager = new CardManager()
-        for (let i = 0; i < 16; i++) {
-            cardManager.addCard(new CardInfo(`title ${i}`, `subtitle ${i}`, `interpretation ${i}`))
+        const records = JSON.parse(localStorage.getItem('records'))
+        for (const record of records) {
+            cardManager.addCard(
+                new CardInfo(record.index,
+                    record.title,
+                    '',
+                    record.interpretation
+                )
+            )
         }
         const cards = cardManager.generateRenderingCards()
         const flashCard = $('.flash-card:first')
         const originalFlashCardContainer = $('.flash-card-container:first')
         const flashCardContainerTemplate = originalFlashCardContainer.clone()
 
-        let isFront= true
+        let isFront = true
         let flashCardContainer = originalFlashCardContainer
         flashCardContainer.addClass('front')
         for (const card of cards) {
@@ -158,13 +196,12 @@
                 flashCardContainer.addClass(isFront ? 'front' : 'back')
                 continue
             }
-            const frontFlashCard = flashCard.clone();
+            const frontFlashCard = flashCard.clone()
             frontFlashCard.css('display', '')
-            frontFlashCard.find('.content').text(card.title);
-            if (card.isBack) {
-                frontFlashCard.addClass('back');
-            }
-            frontFlashCard.appendTo(flashCardContainer);
+            frontFlashCard.find('.number').text(card.index)
+            frontFlashCard.find('.content').text(card.title)
+            frontFlashCard.addClass(card.isBack ? 'back' : 'front')
+            frontFlashCard.appendTo(flashCardContainer)
         }
     }
 </script>
